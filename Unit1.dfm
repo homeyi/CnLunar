@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 673
-  ClientWidth = 1209
+  ClientHeight = 451
+  ClientWidth = 1077
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,11 +11,12 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 232
-    Top = 479
+    Left = 831
+    Top = 263
     Width = 60
     Height = 25
     Caption = 'Label1'
@@ -27,8 +28,8 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label2: TLabel
-    Left = 232
-    Top = 527
+    Left = 831
+    Top = 305
     Width = 60
     Height = 25
     Caption = 'Label1'
@@ -40,8 +41,21 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 232
-    Top = 575
+    Left = 831
+    Top = 347
+    Width = 60
+    Height = 25
+    Caption = 'Label1'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label4: TLabel
+    Left = 831
+    Top = 390
     Width = 60
     Height = 25
     Caption = 'Label1'
@@ -55,9 +69,9 @@ object Form1: TForm1
   object StringGrid1: TStringGrid
     Left = 8
     Top = 24
-    Width = 1153
-    Height = 433
-    ColCount = 7
+    Width = 793
+    Height = 401
+    ColCount = 6
     DefaultColWidth = 100
     FixedCols = 0
     RowCount = 15
@@ -70,65 +84,19 @@ object Form1: TForm1
     ParentFont = False
     TabOrder = 0
   end
-  object Button1: TButton
-    Left = 72
-    Top = 624
-    Width = 97
-    Height = 41
-    Caption = 'Button1'
-    Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -21
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 1
-    OnClick = Button1Click
-  end
-  object Button2: TButton
-    Left = 567
-    Top = 628
-    Width = 82
-    Height = 37
-    Caption = 'Button2'
-    TabOrder = 2
-  end
-  object Edit1: TEdit
-    Left = 48
-    Top = 476
-    Width = 121
-    Height = 33
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -21
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 3
-    Text = '2020-'
-  end
   object MonthCalendar1: TMonthCalendar
-    Left = 943
-    Top = 463
+    Left = 831
+    Top = 24
     Width = 218
     Height = 178
-    Date = 44742.855630462960000000
-    TabOrder = 4
+    Date = 44742.873044826390000000
+    TabOrder = 1
     OnClick = MonthCalendar1Click
   end
-  object Button3: TButton
-    Left = 703
-    Top = 628
-    Width = 75
-    Height = 37
-    Caption = 'Button3'
-    TabOrder = 5
-  end
   object DateTimePicker1: TDateTimePicker
-    Left = 80
-    Top = 544
-    Width = 113
+    Left = 831
+    Top = 208
+    Width = 218
     Height = 33
     Date = 44752.407793564820000000
     Time = 44752.407793564820000000
@@ -139,6 +107,7 @@ object Form1: TForm1
     Font.Style = []
     Kind = dtkTime
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 2
+    OnClick = MonthCalendar1Click
   end
 end

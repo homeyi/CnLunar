@@ -3,7 +3,7 @@ unit ssBasic;
 interface
 
 uses
-  Math, SysUtils, DateUtils;
+  System.Math, System.Classes, SysUtils, DateUtils;
 
 {
   設定:
@@ -41,7 +41,6 @@ uses
   procedure SetChEra(inDate: TDateTime);
 
   function strCN(): String; //日期干支
-  function strJq(): string;
   function strFullKong(): String; //四值空亡
   function strXun(): string;  //六旬
   function strKong(): String;
@@ -50,13 +49,22 @@ uses
   //測試---增加神煞等
   function zhiYiMa(izhi: integer): integer;
 
+  //delete
+  procedure forgrid(ilist: TStringList; ii: integer);
+  function bb1: string;
+  function bb2: string;
+  function strJq(ch: integer): string;
+
 //公用變量
 var
   crDate, crJie, crQi: TDateTime;
-  Year,Month,Day,Hour,Mins,Sec,MSec: word;
-  gYear,gMonth,gDay,gTime,zYear,zMonth,zDay,zTime: integer;
+  strJie, strQi, strnlYue, strnlRi: string;
+  Year, Month, Day, Hour, Mins, Sec, MSec: word;
+  gYear, gMonth, gDay, gTime, zYear, zMonth, zDay, zTime: integer;
   ooShou, ooXun, ooKong: integer;
 
+  //delete
+  ll: integer;
 const
   strTianGan: array of string = ['','甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
   strDiZhi: array of string = ['','子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
@@ -254,26 +262,26 @@ begin
   result := ma[izhi mod 4];
 end;
 
+//干支年月日时
 //年干支
 procedure yGz(y: integer);
 begin
 
   //控件只能輸入 1601 年后，故公式簡化爲公元3年起
-  if crJq.dLichun > crDate then DEC(y); //是否立春后
+  if Jq[2] > crDate then DEC(y); //是否立春后
 
   gYear := (y - 3) mod 10;
   zYear := (y - 3) mod 12;
 
   if gYear = 0 then gYear := 10;
-  if zYear = 0 then zYear := 12;  
-  
+  if zYear = 0 then zYear := 12;
 end;
 
 //月干支
 procedure mGz();
 begin
 
-  if crDate < crJq.dJie then zMonth := Month -2 else zMonth := Month -1;
+  if crDate < crJie then zMonth := Month -2 else zMonth := Month -1;
 
   if zMonth <=0 then zMonth := zMonth + 12;
 
@@ -282,7 +290,7 @@ begin
 
   if gMonth = 0 then gMonth := 10;
   if zMonth = 0 then zMonth := 12;
-  
+
 end;
 
 //日干支
@@ -318,7 +326,48 @@ begin
 
   if gTime = 0 then gTime := 10;
   if zTime = 0 then zTime := 12;
-  
+
+end;
+
+procedure SetLunar();
+const
+  jqB: array of String = [ // 节气表
+    '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露',
+    '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至', '小寒', '大寒', '立春', '雨水', '惊蛰'];
+
+  strnl: array of string = ['一','二','三','四','五','六','七','八','九'];
+
+var
+  dif: integer;
+begin
+  crJie := jq[Month];
+  crQi  := zq[Month];
+
+  strJie := jqB[(Month*2 + 17) mod 24];
+  strQi  := jqB[(Month*2 + 18) mod 24];
+
+  if (trunc(crDate) - trunc(hs[Month])) < 0 then begin
+    Dif := Month - 1;
+    while (trunc(crDate) - trunc(hs[Dif])) < 0 do Dec(Dif);
+
+    strnlYue := syn[Dif];
+    dif := trunc(crDate) - trunc(hs[Dif]);
+  end
+  else begin
+    strnlYue := syn[Month];
+    dif := trunc(crDate) - trunc(hs[Month]);
+  end;
+
+  case dif of
+      0,30: strnlRi := '初一';
+      1..8: strnlRi := '初' + strnl[dif];
+         9: strnlRi := '初十';
+    10..18: strnlRi := '十' + strnl[dif mod 10];
+        19: strnlRi := '廿';
+    20..28: strnlRi := '廿' + strnl[dif mod 10];
+        29: strnlRi := '卅';
+  end;
+
 end;
 
 procedure SetChEra(inDate: TDateTime);  //日期转换为干支
@@ -329,9 +378,11 @@ begin
   DeCodeTime(inDate,Hour,Mins,Sec,MSec);
   DeCodeDate(inDate,Year,Month,Day);
 
-  CalcLunar(inDate);
-  crJie := crJq.dJie;
-  crQi  := crJq.dQi;
+  syn := TStringList.Create;
+  paiYue(Year);
+
+  SetLunar;
+  ll := syn.Count -1;
 
   //年月日時干支
   yGz(Year);
@@ -348,8 +399,8 @@ begin
     7,8: ooShou := 5;
     9,10: ooShou := 6;
   end;
-  
-  //旬首
+
+  //旬首空首
   ooXun := (zDay - gDay + 13) mod 12;
   ooKong := (zDay - gDay + 11) mod 12;
 
@@ -362,16 +413,6 @@ begin
      strTianGan[gMonth], strDiZhi[zMonth], strTianGan[gDay], strDiZhi[zDay],
      strTianGan[gTime], strDiZhi[zTime]]);
 
-end;
-
-function strJq(): string;
-begin
-  result := format('%s %s %s',[crJq.nJie,crJq.nQi,crJq.nYue]);
-end;
-
-function strLunar(): string;
-begin
-  result := crJq.nYue + crJq.nRi;
 end;
 
 function strKong(): String;
@@ -397,6 +438,45 @@ end;
 function strXun(): string;
 begin
   result := format('甲%s旬',[strDizhi[ooXun]]);
+end;
+
+procedure forgrid(ilist: TStringList; ii: integer);
+const
+  jqB: array of String = [ // 节气表
+    '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露',
+    '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至', '小寒', '大寒', '立春', '雨水', '惊蛰'];
+begin
+  ilist.Append(jqB[(ii*2+17) mod 24]);
+  ilist.Append(FormatDateTime('YYYY-MM-DD hh:nn',jq[ii]));
+  ilist.Append(jqB[(ii*2+18) mod 24]);
+  ilist.Append(FormatDateTime('YYYY-MM-DD hh:nn',zq[ii]));
+  ilist.Append(syn[ii]);
+  ilist.Append(FormatDateTime('YYYY-MM-DD hh:nn',hs[ii]));
+end;
+
+function bb1: string;
+begin
+  result := strJie + '>' + FormatDateTime('MM月DD hh:nn', crJie) + '  ';
+  result := result + strQi + '>' + FormatDateTime('MM月DD hh:nn', crQi)
+end;
+function bb2: string;
+begin
+  result := strnlYue + ' ' + strnlRi;
+end;
+
+function strJq(ch: integer): string;
+begin
+  case ch of
+   1: result := format('%s: %s',[strJie,formatDateTime('MM月DD日 hh:nn',crJie)]);
+   2: result := format('%s: %s',[strQi, formatDateTime('MM月DD日 hh:nn',crQi)]);
+   3: result := strnlYue + '  ' + strnlRi;
+  end;
+
+end;
+
+function strLunar(): string;
+begin
+  //result := crJq.nYue + crJq.nRi;
 end;
 
 end.

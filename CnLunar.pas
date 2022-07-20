@@ -3,24 +3,20 @@
  * @mail moodlxs@163.com
  *
  * Javascipt -> Java
- * ->delphi by bb 2022-6-7
+ * ->delphi xe7 by bb 2022-6-7
  */}
 unit CnLunar;
 
 interface
 
 uses
-  SysUtils, DateUtils, System.Math, System.Classes;
+  DateUtils, System.Math, System.Classes;
 
-  procedure CalcLunar(crdate: TDateTime);
-
-type TYueJieQi = record
-  dJie, dQi, dlunar0, dlunar1, dLichun: TDateTime;
-  nJie, nQi, nYue, nRi: string;
-end;
+  procedure paiYue(y: integer);
 
 var
-  crJq: TYueJieQi;
+  zq, jq, hs: array[0..15] of double; //中气,节气,日月合朔
+  syn: TstringList;  //全年月份名
 
 implementation
 
@@ -437,8 +433,6 @@ M1n: array of double = [// 月球平黄经系数
      3.81034392032, 8.39968473021E+03, -3.31919929753E-05, 3.20170955005E-08, -1.53637455544E-10 ];
 
 var
-  zq, jq, hs: array[0..15] of double; //中气表,节气表,日月合朔表
-  syn: TStringList;
 
   PI: double = 3.141592653589793;
   // ========角度变换===============
@@ -814,7 +808,6 @@ end;
 //=======以上完成整年的節氣及合朔日
 
 //y全年的节气及合朔公历日
-//procedure paiYue(y: integer; var ibb: array of string; var tot: integer);
 procedure paiYue(y: integer);
 const
   yueMing: array of String = ['正月','二月','三月','四月','五月','六月',
@@ -829,26 +822,33 @@ begin
 
   t1 := 365.2422 * (y - 2000) - 50; // 农历年首始于前一年的冬至,为了节气中气一起算,取前年大雪之前
 
+  //从冬至始,计算连续14个中气时刻
   for i := 0 to 13 do begin // 计算节气(从冬至开始),注意: 返回的是力学时
-    zq[i] := jiaoCal(t1 + i * 30.4, i * 30 - 90, 0); // 中气计算,冬至的太阳黄经是270度(或-90度)
+    zq[i] := jiaoCal(t1 + i * 30.4, i * 30 - 90, 0);  // 中气计算,冬至的太阳黄经是270度(或-90度)
     jq[i] := jiaoCal(t1 + i * 30.4, i * 30 - 105, 0); // 顺便计算节气,它不是农历定朔计算所必需的
-  end;
 
-  //从冬至始,计算连续14个中气时刻，冬至后,计算连续14个日月合朔时刻
-  dongZhiJia1 := zq[0] + 1 - Dint_dec(zq[0], false); // 冬至过后的第一天0点的儒略日数
-  hs[0] := jiaoCal(dongZhiJia1, 0, 1); // 首月结束的日月合朔时刻
+    if i>0 then
+      hs[i] := jiaoCal(hs[i - 1] + 25, 0, 1)   //计算连续14个日月合朔时刻
+    else begin
+      dongZhiJia1 := zq[0] + 1 - Dint_dec(zq[0], false); // 冬至过后的第一天0点的儒略日数
+      hs[0] := jiaoCal(dongZhiJia1, 0, 1); // 首月结束的日月合朔时刻
+    end;
 
-  for i := 1 to 13 do
-    hs[i] := jiaoCal(hs[i - 1] + 25, 0, 1);
-
-  for i := 0 to 13 do begin // 取当地UTC日数的整数部分
-    A[i] := Dint_dec(zq[i]);
+    A[i] := Dint_dec(zq[i]); //取当地UTC日数的整数部分
     C[i] := Dint_dec(hs[i]);
   end;
 
+  C[0] := Dint_dec(hs[0]);
+
+  for i := 0 to 13 do begin  //转成 UTC 时
+    jq[i] := setFromJD(jq[i]);
+    zq[i] := setFromJD(zq[i]);
+    hs[i] := setFromJD(hs[i]);
+  end;
+
+  //农历月份名称大小，闰月
   syn.Clear;
 
-  //农历月份名，闰月大小
   for i := 0 to 12 do begin
     if (C[i + 1] - C[i]) > 29 then
       syn.Append(yueMing[(i + 11) mod 12] + '大')
@@ -860,14 +860,13 @@ begin
       //若要继续用APPEND 须删除闰月后的月份名
       while syn.Count > (i - 1) do syn.Delete(syn.Count - 1);
 
-      nun := i;
-
       if (C[i] - C[i - 1]) > 29 then
-        syn.Append('闰' + yueMing[(syn.Count + 10) mod 12] + '大')
+        syn.Append('閏' + yueMing[(syn.Count + 10) mod 12] + '大')
       else
-        syn.Append('闰' + yueMing[(syn.Count + 10) mod 12] + '小');
+        syn.Append('閏' + yueMing[(syn.Count + 10) mod 12] + '小');
 
       //插入閏月后
+      nun := i;
       while nun < 14 do begin
 
         if (C[nun + 1] - C[nun]) > 29 then
@@ -879,63 +878,9 @@ begin
       end;
 
       break;
-    end; //初一日小于中氣爲閏月
+    end; //初一日小于中氣日上月爲閏月
 
   end;
-
-  for i := 0 to 13 do begin  //转成 UTC 时
-    jq[i] := setFromJD(jq[i]);
-    zq[i] := setFromJD(zq[i]);
-    hs[i] := setFromJD(hs[i]);
-  end;
-
-end;
-
-procedure CalcLunar(crDate: TDateTime);
-const
-  jqB: array of String = [ // 节气表
-    '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露',
-    '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至', '小寒', '大寒', '立春', '雨水', '惊蛰'];
-
-  strnl: array of string = ['一','二','三','四','五','六','七','八','九'];
-
-var
-  dif: integer;
-  oYear, oMonth, oDay, oHour, oMins, oSec, oSs: Word;
-begin
-  syn := TStringList.Create;
-  DecodeDateTime(crdate, oYear, oMonth, oDay, oHour, oMins, oSec, oSs);
-
-  paiYue(oYear);
-
-  crJq.dJie := jq[oMonth];
-  crJq.dQi  := zq[oMonth];
-  crJq.dLichun:= zq[2];
-  crJq.dlunar0 := hs[oMonth - 1];
-  crJq.dlunar1 := hs[oMonth];
-  crJq.nJie := jqB[(oMonth*2 + 17) mod 24];
-  crJq.nQi  := jqB[(oMonth*2 + 18) mod 24];
-
-  if (trunc(crDate) - trunc(crJq.dlunar1)) < 0 then begin
-      crJq.nYue := syn[oMonth - 1];
-      dif := trunc(crDate) - trunc(crJq.dlunar0);
-    end
-  else begin
-      crJq.nYue := syn[oMonth];
-      dif := trunc(crDate) - trunc(crJq.dlunar1);
-  end;
-
-  case dif of
-      0,30: crJq.nRi := '初一';
-      1..8: crJq.nRi := '初' + strnl[dif];
-         9: crJq.nRi := '初十';
-    10..18: crJq.nRi := '十' + strnl[dif mod 10];
-        19: crJq.nRi := '廿';
-    20..28: crJq.nRi := '廿' + strnl[dif mod 10];
-        29: crJq.nRi := '卅';
-  end;
-
-  syn.Free;
 
 end;
 
